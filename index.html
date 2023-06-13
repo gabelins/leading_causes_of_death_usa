@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	<style> .btn{border:1px solid black; padding:5px;display:inline-block} </style>
+</head>
+<body>
+	<div class="container">
+		<h1>Number of Deaths for the 10 Leading Causes of Death: 
+			United States, 2017†</h1>
+		<p>This comparison chart displays the number of deaths for the 10 leading causes of death. This comparison chart aims to show the sheer difference in magnitude of the top 10 causes of death in the U.S.
+
+ 
+
+			Albeit morbid, the leading causes of diseases are an interesting topic because current diets, lifestyles, and the environment may influence these statistics. </p>
+		<form>
+			<input type="button" value="Go" id="btn_1">
+		</form>
+		<br><br><br>
+		<div id="output"></div>
+	</div>
+</body>
+<script>
+
+// Some notes.  
+//
+// In this example we will compare the populations of the top 5 most populated countries.
+// The data will be retreived from a Web Service found at this url:
+// https://restcountries.com/v3.1/all
+//  
+// To get the result we want, we can't just work with the data as it comes from the source.
+// We need to first put the data we want into a new format.  It helps to throw away
+// the data attributes we don't need and keep only the ones that are useful.
+// 
+// To determine which of the 250 countries has the greatest population we'll take this
+// strategy: sort the data by population from highest to lowest, then inspect the first
+// 5 records.
+//
+// Sorting in JavaScript is tricky.  It's best to use a 2 dimensional array 
+// that is numerically indexed in both dimensions.
+//
+// This (with imaginary data) is the structure what we want:
+// [
+//	[99999999, "The People's Country"],
+//	[9999999, "Free Landia"],
+//	[9999900, "Terra Nostra"],
+//	[9999700, "Oceana"],
+//	[9999600, "The Province of Sealand"]
+// ]
+//
+// In the example above "The People's Country" is the biggest.
+//
+// Once we have the data, we will want to manipulate portions of the
+// URL to the image chart.
+//
+// The linebreaks have been added to make this URL more readable.
+//
+/*
+Original URL from image-charts testing
+
+https://image-charts.com/chart?
+chco=b2dffb|e7a4e4|ffc55c|66cccc|cc0066|ffcc00&
+chd=t:30,-60,50,140,80,-90&
+chds=-80,140&
+chs=700x700&
+cht=bvs&
+chxl=1:|Tommy|Jimmy|Henry|Marty|Lucky|Sammy&
+chxt=y,x
+
+*/
+//
+// The URL we build is to be used as the src attribute 
+// of the HTML img tag.
+// 
+
+//Supporting Functions 
+
+function getTheData() {
+  $.getJSON("https://data.cdc.gov/resource/bi63-dtpu.json?state=United States", function(result){
+    console.log("Here we go get the data...");
+    console.log(result);
+
+    let newdata = [];
+
+    for (let i = 0; i < result.length; i++) {
+      let item = [];
+
+      if (result[i]["year"] == "2017" && result[i]["cause_name"] != "All causes") {
+        
+		let text = result[i]["cause_name"];
+		item[0] = text.replace("'","`")
+
+        item[1] = result[i]["deaths"];
+		newdata[i] = item
+        console.log(item[0] + item[1]);
+		
+	  }
+	}
+	console.log(newdata);
+		//ok .... time to sort it all
+		//the following fancy code was added to sort things
+		//numerically, not alpabetically.
+		newdata.sort(function(pos1,pos2){
+			return parseInt(pos2[1]) - parseInt(pos1[1])
+		});
+		//
+		//Sorting numbers in JavaScript seems strange when
+		//you first see it.  The use of the "comparator function"
+		//looks very alien to the novice programmer.
+		//
+		//For now, you can just copy the above code -OR- if you want
+		//you can learn about it at:
+		// https://www.w3schools.com/jsref/jsref_sort.asp 
+		// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+		// https://youtu.be/kxUNQtheCxM
+		//
+		console.log(newdata);
+		plotTheChart(newdata);
+	});
+
+}
+
+function plotTheChart(data) {
+  	let imageurl = "https://image-charts.com/chart?"
+  	imageurl += "chco=b2dffb|e7a4e4|ffc55c|66cccc|cc0066|ffcc00&"
+  	imageurl += "chd=t:" + data[0][1] + "," + data[1][1] + "," + data[2][1] + "," + data[3][1] + "," + data[4][1] + "," + data[5][1] + "," + data[6][1] + "," + data[7][1] + "," + data[8][1] + "," + data[9][1] + "&";
+  	imageurl += "chds=0," + data[0][1] + "&"
+  	imageurl += "chs=700x700&"
+  	imageurl += "cht=bhg&"
+  	imageurl += "chxl=0:|" + data[9][0] + "|" + data[8][0] + "|" + data[7][0] + "|" + data[6][0] + "|" + data[5][0] + "|" + data[4][0] + "|" + data[3][0] + "|" + data[2][0] + "|" + data[1][0] + "|" + data[0][0] + "|1:|0|200000|400000|600000&";
+
+  	imageurl += "chxt=y,x"
+  	console.log(imageurl)
+  	$("#output").html("<img src='" + imageurl + "'>");
+}
+
+
+
+
+
+
+
+
+//click event handlers
+
+$('#btn_1').click(function(){
+	getTheData();
+})
+
+</script>
+</html>
